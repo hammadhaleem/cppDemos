@@ -1,4 +1,5 @@
-
+#include<iostream>
+#include <string>
 #ifndef CICULARLIST_H_
 #define CICULARLIST_H_
 #define LIS_SIZE  10
@@ -10,6 +11,8 @@ class circularList {
 	~circularList();
 	void insert(int element);
 	int pop();
+	friend std::ostream & operator<<(std::ostream &os, const circularList& p);
+	char* toSt();
 private :
 	int headIsAhead();
 	int *lis_ptr ;
