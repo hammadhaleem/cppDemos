@@ -1,6 +1,5 @@
-import os
-import pprint
-
+import os, pprint
+import time , datetime , collections , json
 pp = pprint.PrettyPrinter(depth=6)
 data_dir = "data/"
 trend = "sharing_bali"
@@ -38,31 +37,50 @@ data = {
 	}
 }
 
-graph = {
-	parent :  < childs >
+time_line = {
+	time_tweet : [{
+		tweetid : <>
+		userid : <> 
+		parentId: <>
+		reply : <>
+	}]
 }
 '''
 
-data = {}
 graph = {}
+time_line = {}
 
 for item in data_combined : 
+	
 	parent = item[3]
 	me = item[1]
+	time_tweet = item[2]
+	tweetId = item[0]
+	reply = item[5]
+
+	#Wed Apr 29 13:10:13 CST 2015
+	time_tweet= time_tweet.replace("CST","")
+	time_tweet = str(time.mktime(datetime.datetime.strptime(time_tweet, "%a %b %d %H:%M:%S %Y").timetuple()))
 	try :
 		if parent is -1:
 			raise Exception
 		graph[parent].append(me)
 	except:
 		graph[me] = []
-keys = graph.keys()
 
-print len(keys)
-tmp = []
-su = 0 
-for i in keys:
-	if len(graph[i]) > 0 :
-		tmp.append([i , len(graph[i])])
-		su =  su + len(graph[i])
-print len(tmp) , su
-# pp.pprint(graph)
+	obj = {
+		"tweetid" : tweetId,
+		"userid" : me,
+		"parentId": parent,
+		"reply" : reply
+	}
+
+	try:
+		time_line[time_tweet].append(obj)
+	except Exception as e:
+		time_line[time_tweet]= []
+		time_line[time_tweet].append(obj)
+
+## constucted timeline for the tweets 
+time_line = collections.OrderedDict(sorted(time_line.items()))
+open("dump.json","w+").write(json.dumps(time_line))
