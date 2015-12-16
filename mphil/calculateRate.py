@@ -19,7 +19,6 @@ for fi in toProcess:
 	lines = open(data_dir + fi ).readlines()
 	data_combined = data_combined + lines
 
-	print len(data_combined)
 
 # tweetId, id, createdAt, parentId, parentPostTime, replyToUserId, lat, longitude, timezone
 data_combined = data_combined[1:] # remvoe header 
@@ -56,5 +55,14 @@ for item in data_combined :
 		graph[parent].append(me)
 	except:
 		graph[me] = []
+keys = graph.keys()
 
-pp.pprint(graph)
+print len(keys)
+tmp = []
+su = 0 
+for i in keys:
+	if len(graph[i]) > 0 :
+		tmp.append([i , len(graph[i])])
+		su =  su + len(graph[i])
+print len(tmp) , su
+# pp.pprint(graph)
