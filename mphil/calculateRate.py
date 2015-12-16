@@ -1,86 +1,33 @@
-import os, pprint
-import time , datetime , collections , json
-pp = pprint.PrettyPrinter(depth=6)
-data_dir = "data/"
-trend = "sharing_bali"
+import json
+time_line = json.loads(open("dump.json").read())
+timer =  time_line.keys()
 
-files = next(os.walk(data_dir))[2]
-toProcess =[]
+ta = 0 
+tb = 0.0 
 
+l_t_b = 0.0
+l_t_a = 0.0
 
+n_t_b = 0.0
+n_t_a = 0.0
 
-for fl in files :
-	if trend in str(fl):
-		toProcess.append(fl)
+r_a = []
+r_b = []
+for item in sorted(timer):
+	elements = time_line[item]
+	tb = float(item)
+	for obj in elements:
+		if obj['parentId'] == "-1": 
+			l_t_b = l_t_b + 1.0
+		else:
+			n_t_b = n_t_b + 1.0
 
-data_combined = []
-for fi in toProcess:
-	lines = open(data_dir + fi ).readlines()
-	data_combined = data_combined + lines
+	r_a.append( (l_t_a - l_t_b) / (ta - tb))
+	r_b.append( (n_t_a - n_t_b) / (ta - tb))
 
+	ta = tb 
+	l_t_a = l_t_b
+	n_t_a = n_t_b
 
-# tweetId, id, createdAt, parentId, parentPostTime, replyToUserId, lat, longitude, timezone
-data_combined = data_combined[1:] # remvoe header 
-lis = []
-for i in data_combined :
-	i = i.replace("\n","").split(",")
-	lis.append(i)
-data_combined = lis
-
- 
-'''
-#Creating a data graph 
-
-data = { 
-	"creator" : {
-	<information>
-	}
-}
-
-time_line = {
-	time_tweet : [{
-		tweetid : <>
-		userid : <> 
-		parentId: <>
-		reply : <>
-	}]
-}
-'''
-
-graph = {}
-time_line = {}
-
-for item in data_combined : 
-	
-	parent = item[3]
-	me = item[1]
-	time_tweet = item[2]
-	tweetId = item[0]
-	reply = item[5]
-
-	#Wed Apr 29 13:10:13 CST 2015
-	time_tweet= time_tweet.replace("CST","")
-	time_tweet = str(time.mktime(datetime.datetime.strptime(time_tweet, "%a %b %d %H:%M:%S %Y").timetuple()))
-	try :
-		if parent is -1:
-			raise Exception
-		graph[parent].append(me)
-	except:
-		graph[me] = []
-
-	obj = {
-		"tweetid" : tweetId,
-		"userid" : me,
-		"parentId": parent,
-		"reply" : reply
-	}
-
-	try:
-		time_line[time_tweet].append(obj)
-	except Exception as e:
-		time_line[time_tweet]= []
-		time_line[time_tweet].append(obj)
-
-## constucted timeline for the tweets 
-time_line = collections.OrderedDict(sorted(time_line.items()))
-open("dump.json","w+").write(json.dumps(time_line))
+for i in range(0, len(timer)):
+	print r_a[i] , r_b[i] 
