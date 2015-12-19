@@ -63,7 +63,7 @@ mean_recent = []
 all_mean =[]
 
 phase = ""
-
+accu =""
 while i_counter <= 100 : 
 
 	## Break away condition 
@@ -78,7 +78,7 @@ while i_counter <= 100 :
 		else:
 			n_t_b = n_t_b + 1.0
 
-	if ((l_t_b + n_t_b ) > i_counter* percent  ): # when the counter moves ahead by x percent 
+	if ((l_t_b + n_t_b ) >= i_counter* percent  ): # when the counter moves ahead by x percent 
 		
 		rate_n = (l_t_a - l_t_b) / (ta - tb)
 		rate_e = (n_t_a - n_t_b) / (ta - tb)
@@ -147,16 +147,23 @@ while i_counter <= 100 :
 		R_n_t_i = float(math.log1p((l_t_a - l_t_b) / (ta - tb)))
 		R_e_t_i = float(math.log1p((n_t_a - n_t_b) / (ta - tb)))
 
-		r_n_bar = ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )
-		r_e_bar = ForJ_one_to_m(R_e_t_i , R_e_t_one ,  i_counter , m )
+		if phase == "rise,fall" : 
+			r_n_bar = math.exp(R_n_t_i + ( m * g_t_i ) -  math.exp(ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
+			r_e_bar = math.exp(R_e_t_i + ( m * g_t_i ) -  math.exp(ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
+		else:
+			r_n_bar = math.exp(R_n_t_i + m * g_t_i)
+			r_e_bar = math.exp(R_e_t_i + m * g_t_i)
+
 
 		N_i = l_t_a + n_t_b
 		N_i_m = N_i + m * delta_t_i * ( r_n_bar  + r_e_bar )
 		if N_i_m >= MAX_TWEETS:
-			err = (m*delta_t_i - tb) / tb
+			T_calc = tb + m*delta_t_i
+			err = (T_calc - 757437.0) / 757437.0
 			if err < 0:
 				err = -1.0*err
-			#print "Time : " ,i_counter, m  , m*delta_t_i , ta , tb  , err
+				accu = accu + str(i_counter) + "," +str(err) + "\n"
+				print m , i_counter , err , ta ,tb , T_calc
 		#post execution
 		ta = tb
 		l_t_a = l_t_b
@@ -175,15 +182,14 @@ for i in range(0, len(r_e)):
 	v3, v4 = r_n[i]
 	stri = stri + str(v1/60.0) + "," + str(v2) + "," + str(v3/60.0)+ ","+ str(v4)+  "," + str(v1/60.0) + "," + str(v2+v4)+ "\n"
 
-open("out_percentage.csv","w+").write(stri)
 
 #print mean , "\n",mean_recent
 
-stri= "0,0,0,0,0,0\n"
+stri1= "0,0,0,0,0,0\n"
 for i in all_mean[1:] :
-	stri = stri + str(i[0]) +","+str(i[1])+","+str(i[0])+"," +str(i[2])+","+str(i[0])+","+str(i[3])+"\n"
+	stri1 = stri1 + str(i[0]) +","+str(i[1])+","+str(i[0])+"," +str(i[2])+","+str(i[0])+","+str(i[3])+"\n"
 
 
-open("mean_out.csv", "w+").write(stri)
-
-
+open("out_percentage.csv","w+").write(stri)
+open("mean_out.csv", "w+").write(stri1)
+open("accu.csv","w+").write(accu)
