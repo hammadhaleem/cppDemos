@@ -7,7 +7,7 @@ trend = "sharing_bali"
 
 files = next(os.walk(data_dir))[2]
 toProcess =[]
-factor = 1
+factor = 30*60*1.5
 
 
 for fl in files :

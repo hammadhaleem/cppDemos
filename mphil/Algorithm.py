@@ -10,12 +10,13 @@ MAX_TWEETS = 0.0
 for k in time_line.keys():
 	MAX_TWEETS = MAX_TWEETS + len(time_line[k])*1.0
 print "Max tweets : " , MAX_TWEETS
+
 # Max number of tweets
 
 # Define variables 
 time_max = 100.0
 percent = MAX_TWEETS / time_max
-recent = 2
+recent = 5
 
 def getMean(lis):
 	su = 0.0
@@ -26,26 +27,28 @@ def getMean(lis):
 def Get_GTi(r_e , r_n):
 	su = 0.0
 	for i in range(0, len(r_e)):
-		su = su + math.log1p(float(r_e[i][1] + r_n[i][1]))
+		su = su + math.log(float(r_e[i][1] + r_n[i][1]))
 	return su/len(r_e)
 
 def ForJ_one_to_m(R_k_t_i, R_k_t_one , i_counter , m ):
 	su = 0.0
 	for i in xrange(1, m):
-		su = su + (i * float(i_counter)/(time_max*1.0) )*( R_k_t_i - R_k_t_one)
+		su = su + (i * float(i_counter)/(time_max) )*( R_k_t_i - R_k_t_one)
 	return su
 
 
 # Iterative algortihm begins 
 keys = []
-for i in time_line.keys():
+TIME_END =0.0
+for i in sorted(time_line.keys()):
 	keys.append(float((i)))
+	
 keys = sorted(keys)
-
-
+TIME_END = keys[-1]
 next = 0
 i_counter = 0
 
+g_t_i = 0.0
 ta = 0.0
 tb = 0.0 
 
@@ -62,8 +65,9 @@ mean =[]
 mean_recent = []
 all_mean =[]
 
-phase = ""
+phase = "rise,fall"
 accu =""
+g_list = []
 while i_counter <= 100 : 
 
 	## Break away condition 
@@ -101,30 +105,41 @@ while i_counter <= 100 :
 		all_mean.append([tb , r_f , r_f_mean_recent, r_f_mean]) # for storage and visualizaiton
 		
 		# phase calculation 
-		if (r_f <= r_f_mean) and  (r_f_mean_recent <= r_f_mean):
-			phase = "rise,fall"
 
-		if (r_f  >= r_f_mean) and (r_f_mean_recent  >= r_f_mean):
-			phase = "fall,rise"
+		g_t_i  = math.log(r_f_mean)
 
-		# getting G(t_i) :  best fit line (global aaverage of values in this case)
-		g_t_i = Get_GTi(r_n , r_e)
+		if (r_f < r_f_mean) and  (r_f_mean_recent < r_f_mean):
+			if phase != "rise,fall":
+				phase = "rise,fall"
+				g_list = []
 
+		if (r_f >= r_f_mean) and  (r_f_mean_recent >= r_f_mean):
+			if phase != "fall,rise":
+				phase = "fall,rise"
+				g_list = []
+
+		if phase is "fall,rise":
+			if g_t_i < 0 :
+				g_t_i = g_t_i *-1
+		else:
+			if g_t_i > 0:
+				g_t_i = g_t_i *-1
+		# print i_counter , phase , g_t_i 
 		# m to number of infection N
 		m = int(time_max - i_counter) 
 
 		try:
 			R_k_t_one = float (max(0.0 , float(r_n[1][1] + r_e[1][1])))
 		except Exception as e :
-			R_k_t_one = 0 
+			R_k_t_one = 1
 
+		R_k_t_i   =float(math.log(r_f))
+		R_k_t_one =float(math.log(R_k_t_one))
 
-		R_k_t_i = float(math.log1p(r_f))
-		R_k_t_one =float(math.log1p(R_k_t_one))
 
 		# compute results 
 		if phase == "rise,fall" : 
-			tmp = R_k_t_i + ( m * g_t_i ) - ForJ_one_to_m(R_k_t_i , R_k_t_one ,  i_counter , m )
+			tmp = R_k_t_i + ( m * g_t_i ) - ForJ_one_to_m(R_k_t_i , R_k_t_one ,  i_counter , m)
 			r_dash_k_m = math.exp(tmp)
 		else:
 			r_dash_k_m = math.exp(R_k_t_i + m * g_t_i)
@@ -134,36 +149,42 @@ while i_counter <= 100 :
 		try:
 			R_n_t_one = float (max(0.0 , float(r_n[1][1])))
 		except Exception as e :
-			R_n_t_one = 0 
+			R_n_t_one = 1
 
 		try:
-			R_e_t_one = float (max(0.0 , float(r_e[1][1])))
+			R_e_t_one = float (max(1.0 , float(r_e[1][1])))
 		except Exception as e :
-			R_e_t_one = 0 
+			R_e_t_one = 1
 
-		R_e_t_one = float(math.log1p(R_e_t_one))
-		R_n_t_one = float(math.log1p(R_n_t_one))
+		R_e_t_one = float(math.log(R_e_t_one))
+		R_n_t_one = float(math.log(R_n_t_one))
+		# print R_e_t_one,R_n_t_one
+		R_e_t_i = float(math.log(rate_e))
+		R_n_t_i = float(math.log(rate_n))
 
-		R_n_t_i = float(math.log1p((l_t_a - l_t_b) / (ta - tb)))
-		R_e_t_i = float(math.log1p((n_t_a - n_t_b) / (ta - tb)))
-
-		if phase == "rise,fall" : 
-			r_n_bar = math.exp(R_n_t_i + ( m * g_t_i ) -  math.exp(ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
-			r_e_bar = math.exp(R_e_t_i + ( m * g_t_i ) -  math.exp(ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
-		else:
-			r_n_bar = math.exp(R_n_t_i + m * g_t_i)
-			r_e_bar = math.exp(R_e_t_i + m * g_t_i)
-
+		tmp_m = m 
+		r_n_bar = 0.0
+		r_e_bar = 0.0
+		for m in xrange(1, tmp_m):
+			if phase is "rise,fall" : 
+				r_n_bar = r_n_bar + math.exp(R_n_t_i + ( m * g_t_i ) -  (ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
+				r_e_bar = r_e_bar + math.exp(R_e_t_i + ( m * g_t_i ) -  (ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
+			else:
+				r_n_bar = r_n_bar + math.exp(R_n_t_i + m * g_t_i)
+				r_e_bar = r_e_bar + math.exp(R_e_t_i + m * g_t_i)
+		m =tmp_m
 
 		N_i = l_t_a + n_t_b
-		N_i_m = N_i + m * delta_t_i * ( r_n_bar  + r_e_bar )
+		N_i_m = N_i + m * delta_t_i * (r_n_bar  + r_e_bar) 
+		print r_n_bar  + r_e_bar  , g_t_i , phase ,m , R_e_t_i , R_n_t_i 
 		if N_i_m >= MAX_TWEETS:
 			T_calc = tb + m*delta_t_i
-			err = (T_calc - 757437.0) / 757437.0
+
+			err = (T_calc - TIME_END) / TIME_END
 			if err < 0:
 				err = -1.0*err
-				accu = accu + str(i_counter) + "," +str(err) + "\n"
-				print m , i_counter , err , ta ,tb , T_calc
+			accu = accu + str(i_counter) + "," +str(err) + "\n"
+			#print i_counter,m , err , ta, TIME_END , T_calc ,N_i_m , N_i , MAX_TWEETS
 		#post execution
 		ta = tb
 		l_t_a = l_t_b
@@ -173,9 +194,9 @@ while i_counter <= 100 :
 		# print i_counter , n_t_b + l_t_b , MAX_TWEETS , (n_t_b + l_t_b) / MAX_TWEETS
 		i_counter = i_counter + 1
 
-
 	next = next + 1 
-# output 
+print tb
+
 stri = ""
 for i in range(0, len(r_e)):
 	v1, v2 = r_e[i]
