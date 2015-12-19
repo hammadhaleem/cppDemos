@@ -1,17 +1,18 @@
 import json
 
-
-# Define variables 
-MAX_TWEETS  = 151931 * 1.0
-time_max = 100.0
-percent = MAX_TWEETS / time_max
-recent = 5
 #loading things 
 time_line = json.loads(open("dump.json").read())
-su = 0
+MAX_TWEETS = 0
 for k in time_line.keys():
-	su = su + len(time_line[k])
-print su
+	MAX_TWEETS = MAX_TWEETS + len(time_line[k])
+
+
+# Define variables 
+MAX_TWEETS  = MAX_TWEETS * 1.0
+time_max = 100.0
+percent = MAX_TWEETS / time_max
+recent = 2
+
 N = 2*(10**5) # popularity traget
 # Iterative algortihm begins 
 keys = []
@@ -37,13 +38,15 @@ r_e = []
 
 mean =[]
 mean_recent = []
+all_mean =[]
+
 
 record = ""
 while i_counter < 100 : 
 	if next >= len(keys):
 		print next
 		break
-	tb = keys[next]
+	tb = keys[next] / (30*60 )
 	for obj in time_line[unicode(str(keys[next]))]:
 		if (obj['parentId'] == "-1" ) or (obj['reply'] != "-1" ): 
 			l_t_b = l_t_b + 1.0
@@ -101,13 +104,17 @@ while i_counter < 100 :
 		
 		r_f_mean_recent = r_e_mean_recent + r_n_mean_recent
 		r_f_mean =r_n_mean + r_e_mean
+
+		all_mean.append([tb , r_f , r_f_mean_recent, r_f_mean])
+		
 		
 		# phase calculation 
 		if (r_f < r_f_mean) and (r_f_mean_recent < r_f_mean):
-			print i_counter , "rise,fall"
+			phase = "rise,fall"
+
 
 		if (r_f  > r_f_mean) and (r_f_mean_recent  > r_f_mean):
-			print i_counter ,"fall,rise"
+			phase = "fall,rise"
 
 		# compute results 
 
@@ -126,4 +133,13 @@ for i in range(0, len(r_e)):
 
 open("out_percentage.csv","w+").write(stri)
 
-print mean , "\n",mean_recent
+#print mean , "\n",mean_recent
+
+stri= "0,0,0,0,0,0\n"
+for i in all_mean[1:] :
+	stri = stri + str(i[0]) +","+str(i[1])+","+str(i[0])+"," +str(i[2])+","+str(i[0])+","+str(i[3])+"\n"
+print stri
+
+open("mean_out.csv", "w+").write(stri)
+
+
