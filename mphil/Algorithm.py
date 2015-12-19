@@ -2,12 +2,16 @@ import json
 
 
 # Define variables 
-MAX_TWEETS  = 10**5 * 1.0
+MAX_TWEETS  = 151931 * 1.0
 time_max = 100.0
 percent = MAX_TWEETS / time_max
 recent = 5
 #loading things 
 time_line = json.loads(open("dump.json").read())
+su = 0
+for k in time_line.keys():
+	su = su + len(time_line[k])
+print su
 N = 2*(10**5) # popularity traget
 # Iterative algortihm begins 
 keys = []
@@ -47,9 +51,6 @@ while i_counter < 100 :
 			n_t_b = n_t_b + 1.0
 
 	'''
-	r_n(t_i)
-	r_e(t_i)
-	phase(i)
 	g(ti)
 	'''
 
@@ -67,7 +68,7 @@ while i_counter < 100 :
 		r_n.append( [tb, (l_t_a - l_t_b) / (ta - tb)])
 		r_e.append( [tb, (n_t_a - n_t_b) / (ta - tb)])
 
-
+		r_f = ((l_t_a - l_t_b) / (ta - tb)) + ((n_t_a - n_t_b) / (ta - tb))
 		r_n_mean = 0.0 
 		r_e_mean = 0.0 
 
@@ -94,9 +95,23 @@ while i_counter < 100 :
 			r_n_mean_recent = r_n_mean_recent + i[1]
 		r_n_mean_recent =r_n_mean_recent / float(len(sub))
 
+
 		mean.append([tb, r_n_mean , r_e_mean , r_n_mean + r_e_mean])
 		mean_recent.append([tb, r_n_mean_recent , r_e_mean_recent , r_e_mean_recent + r_n_mean_recent])
 		
+		r_f_mean_recent = r_e_mean_recent + r_n_mean_recent
+		r_f_mean =r_n_mean + r_e_mean
+		
+		# phase calculation 
+		if (r_f < r_f_mean) and (r_f_mean_recent < r_f_mean):
+			print i_counter , "rise,fall"
+
+		if (r_f  > r_f_mean) and (r_f_mean_recent  > r_f_mean):
+			print i_counter ,"fall,rise"
+
+		# compute results 
+
+
 		#post execution
 		ta = tb
 		l_t_a = l_t_b
