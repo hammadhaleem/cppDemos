@@ -20,9 +20,9 @@ r_b = []
 
 for item in sorted(timer):
 	elements = time_line[str(item)]
-	tb = float(item) / 60.0
+	tb = int(item) 
 	for obj in elements:
-		if obj['parentId'] == "-1": 
+		if (obj['parentId'] == "-1" ) or (obj['reply'] != "-1" ): 
 			l_t_b = l_t_b + 1.0
 		else:
 			n_t_b = n_t_b + 1.0
@@ -36,7 +36,8 @@ for item in sorted(timer):
 
 stri = ""
 for i in range(0, len(timer)):
-	v1, v2 =r_b[i]
-	stri = stri + str(v1) + "," + str(v2) +"\n"
+	v1, v2 = r_b[i]
+	v3, v4 = r_a[i]
+	stri = stri + str(v1 / 60 ) + "," + str(v2) + "," + str(v3 /60)+ ","+ str(v4)+  "," + str(v1/60) + "," + str(v2 + v4)+ "\n"
 
-open("out.csv","w+").write(stri)
+open("out_time.csv","w+").write(stri)

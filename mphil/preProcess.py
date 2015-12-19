@@ -7,7 +7,7 @@ trend = "sharing_bali"
 
 files = next(os.walk(data_dir))[2]
 toProcess =[]
-
+factor = 60
 
 
 for fl in files :
@@ -61,8 +61,10 @@ for item in data_combined :
 	reply = item[5]
 
 	#Wed Apr 29 13:10:13 CST 2015
-	time_tweet= time_tweet.replace("CST","")
-	time_tweet = float(time.mktime(datetime.datetime.strptime(time_tweet, "%a %b %d %H:%M:%S %Y").timetuple())) 
+	time_tweet = time_tweet.replace("CST","")
+	time_tweet = time.mktime(datetime.datetime.strptime(time_tweet, "%a %b %d %H:%M:%S %Y").timetuple())
+	time_tweet =  int(time_tweet/(factor))
+
 	if mini > time_tweet : 
 		mini = time_tweet
 	try :
@@ -87,10 +89,11 @@ for item in data_combined :
 
 tmp_data = {}
 for tmp in time_line.keys():
-	tmp_data[float(tmp - mini +1)] = time_line[tmp]
+	tmp_data[factor*float(tmp - mini +1)] = time_line[tmp]
 del time_line
 
 time_line = tmp_data
+
 
 ## constucted timeline for the tweets 
 time_line = collections.OrderedDict(sorted(time_line.items()))
