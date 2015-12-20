@@ -62,7 +62,8 @@ recent = 5
 
 ## Algorithm begins 
 
-
+mini = 999999
+maxi = -999999
 next = 0
 i_counter = 0
 
@@ -86,6 +87,7 @@ all_mean =[]
 phase = "rise,fall"
 accu =""
 g_list = []
+g_list_1 = []
 while i_counter <= 100 : 
 
 	## Break away condition 
@@ -127,17 +129,27 @@ while i_counter <= 100 :
 		if (r_f < r_f_mean) and  (r_f_mean_recent < r_f_mean):
 			if phase != "rise,fall":
 				phase = "rise,fall"
-				g_list =[]
 
 		if (r_f >= r_f_mean) and  (r_f_mean_recent >= r_f_mean):
 			if phase != "fall,rise":
 				phase = "fall,rise"
-				g_list = []
 		
-		g_list.append(r_f)
+		if r_f > maxi:
+			maxi = r_f
+		if r_f < mini:
+			mini = r_f
+
+		g_list_1.append(r_f)
+		g_list.append( [r_f , tb ])
+		t=0
+		if phase == "rise,fall":
+			index = g_list_1.index(maxi)
+		else:
+			index = g_list_1.index(mini)
 		for i in g_list:
-			g_t_i = g_t_i + math.log(i) 
-		g_t_i = g_t_i / len(g_list)
+			g_t_i = g_t_i + math.log(i[0]) / i[1] 
+			t=t+i[1]
+		g_t_i =g_t_i / len(g_list)
 
 		if phase is "fall,rise":
 			if g_t_i < 0 :
@@ -146,7 +158,8 @@ while i_counter <= 100 :
 		else:
 			if g_t_i > 0:
 				g_t_i = g_t_i *-1
-		# print i_counter , phase , g_t_i 
+
+		# print i_counter , phase , g_t_i , math.exp(g_t_i*t) ,r_f
 		# m to number of infection N
 		m = int(time_max - i_counter) 
 
@@ -189,7 +202,7 @@ while i_counter <= 100 :
 		tmp_m = m 
 		r_n_bar = 0.0
 		r_e_bar = 0.0
-		for m in xrange(1, tmp_m):
+		for m in xrange(0, tmp_m):
 			try:
 				if phase is "rise,fall" : 
 					r_n_bar = r_n_bar +  rate_n * math.exp( 1.0*m * g_t_i - ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m ))
@@ -199,10 +212,18 @@ while i_counter <= 100 :
 					r_e_bar = r_e_bar + rate_e*math.exp(m * g_t_i )
 			except Exception as e:
 				print "ERR",e
-		m =tmp_m
 
-		N_i = l_t_a + n_t_b
-		N_i_m = N_i + m * delta_t_i * (r_n_bar  + r_e_bar) 
+
+			N_i = l_t_a + n_t_b
+			N_i_m = N_i + m * delta_t_i * (r_n_bar  + r_e_bar) 
+			if N_i_m > popularity_traget:
+				tmp_m = m+1
+				break
+
+		m =tmp_m
+		# N_i = l_t_a + n_t_b
+		# N_i_m = N_i + m * delta_t_i * (r_n_bar  + r_e_bar)
+
 		if N_i_m >= popularity_traget*0.9:
 			T_calc = tb + m*delta_t_i
 
@@ -210,8 +231,10 @@ while i_counter <= 100 :
 			if err < 0:
 				err = -1.0*err
 
-			accu = accu + str(i_counter*10) + "," +str(err) + "\n"
-			print i_counter,m , err ,(N_i_m - N_i )/ MAX_TWEETS 
+			err_n = (N_i_m - N_i )/ MAX_TWEETS
+			accu = accu + str(i_counter) + "," +str(err) + "\n"
+			print i_counter,m , err ,err_n  , g_t_i
+
 		#post execution
 		ta = tb
 		l_t_a = l_t_b
