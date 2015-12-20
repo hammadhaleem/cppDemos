@@ -1,22 +1,5 @@
 import json , math
 
-#loading things 
-
-time_line = json.loads(open("dump.json").read())
-# load all tweets processed 
-
-MAX_TWEETS = 0.0
-
-for k in time_line.keys():
-	MAX_TWEETS = MAX_TWEETS + len(time_line[k])*1.0
-print "Max tweets : " , MAX_TWEETS
-
-# Max number of tweets
-
-# Define variables 
-time_max = 100.0
-percent = MAX_TWEETS / time_max
-recent = 5
 
 def getMean(lis):
 	su = 0.0
@@ -33,8 +16,25 @@ def Get_GTi(r_e , r_n):
 def ForJ_one_to_m(R_k_t_i, R_k_t_one , i_counter , m ):
 	su = 0.0
 	for i in xrange(1, m):
-		su = su + (i * float(i_counter)/(time_max) )*( R_k_t_i - R_k_t_one)
+		su = su + (i * float(i_counter)/(100.0 ))*( R_k_t_i - R_k_t_one)
 	return su
+
+
+#loading things 
+
+time_line = json.loads(open("dump.json").read())
+# load all tweets processed 
+
+MAX_TWEETS = 0.0
+
+for k in time_line.keys():
+	MAX_TWEETS = MAX_TWEETS + len(time_line[k])*1.0
+print "Max tweets : " , MAX_TWEETS
+
+# Max number of tweets
+
+# Define variables 
+
 
 
 # Iterative algortihm begins 
@@ -44,7 +44,27 @@ for i in sorted(time_line.keys()):
 	keys.append(float((i)))
 	
 keys = sorted(keys)
-TIME_END = keys[-1]
+
+### 
+popularity_traget= 151900
+time_to_target = 0.0
+su = 0
+for tmp in keys: 
+	su = su + len(time_line[str(tmp)])
+	if su > popularity_traget:
+		print su
+		time_to_target = tmp
+	
+		break 
+## Define 
+
+time_max = 100.0
+percent = popularity_traget / time_max
+recent = 5
+
+## Algorithm begins 
+
+
 next = 0
 i_counter = 0
 
@@ -106,17 +126,15 @@ while i_counter <= 100 :
 		
 		# phase calculation 
 
-		g_t_i  = math.log(r_f_mean)
+		g_t_i  = math.log(r_f_mean_recent)
 
 		if (r_f < r_f_mean) and  (r_f_mean_recent < r_f_mean):
 			if phase != "rise,fall":
 				phase = "rise,fall"
-				g_list = []
 
 		if (r_f >= r_f_mean) and  (r_f_mean_recent >= r_f_mean):
 			if phase != "fall,rise":
 				phase = "fall,rise"
-				g_list = []
 
 		if phase is "fall,rise":
 			if g_t_i < 0 :
@@ -158,7 +176,9 @@ while i_counter <= 100 :
 
 		R_e_t_one = float(math.log(R_e_t_one))
 		R_n_t_one = float(math.log(R_n_t_one))
+
 		# print R_e_t_one,R_n_t_one
+		
 		R_e_t_i = float(math.log(rate_e))
 		R_n_t_i = float(math.log(rate_n))
 
@@ -166,23 +186,28 @@ while i_counter <= 100 :
 		r_n_bar = 0.0
 		r_e_bar = 0.0
 		for m in xrange(1, tmp_m):
-			if phase is "rise,fall" : 
-				r_n_bar = r_n_bar + math.exp(R_n_t_i + ( m * g_t_i ) -  (ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
-				r_e_bar = r_e_bar + math.exp(R_e_t_i + ( m * g_t_i ) -  (ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m )))
-			else:
-				r_n_bar = r_n_bar + math.exp(R_n_t_i + m * g_t_i)
-				r_e_bar = r_e_bar + math.exp(R_e_t_i + m * g_t_i)
+			try:
+				if phase is "rise,fall" : 
+					r_n_bar = r_n_bar +  rate_n * math.exp( 1.0*m * g_t_i - ForJ_one_to_m(R_n_t_i , R_n_t_one ,  i_counter , m ))
+					r_e_bar = r_e_bar +  rate_e * math.exp( 1.0*m * g_t_i - ForJ_one_to_m(R_e_t_i , R_e_t_one ,  i_counter , m ))
+				else:
+					r_n_bar = r_n_bar + rate_n*math.exp(m * g_t_i )
+					r_e_bar = r_e_bar + rate_e*math.exp(m * g_t_i )
+			except Exception as e:
+				print "ERR",e
 		m =tmp_m
 
 		N_i = l_t_a + n_t_b
 		N_i_m = N_i + m * delta_t_i * (r_n_bar  + r_e_bar) 
-		print r_n_bar  + r_e_bar  , g_t_i , phase ,m , R_e_t_i , R_n_t_i 
-		if N_i_m >= MAX_TWEETS:
+		print r_n_bar  + r_e_bar  , g_t_i , phase ,m 
+		if N_i_m >= popularity_traget:
 			T_calc = tb + m*delta_t_i
 
-			err = (T_calc - TIME_END) / TIME_END
+			err = (T_calc - time_to_target) / time_to_target
 			if err < 0:
 				err = -1.0*err
+			if err > 1:
+				err = 1
 			accu = accu + str(i_counter) + "," +str(err) + "\n"
 			#print i_counter,m , err , ta, TIME_END , T_calc ,N_i_m , N_i , MAX_TWEETS
 		#post execution
