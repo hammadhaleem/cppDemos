@@ -1,6 +1,6 @@
 import json
 
-time_line = json.loads(open("dump.json").read())
+time_line = json.loads(open("out/dump.json").read())
 item_list =[]
 for key in time_line.keys():
 	for i in time_line[key]:
@@ -58,4 +58,4 @@ for i in range(0, len(r_b)):
 	v3,v4  =r_a[i]
 	stri = stri + str(v1) + "," + str(v2) + "," + str(v3)+ ","+ str(v4)+  "," + str(v1) + "," + str(v2 + v4)+ "\n"
 
-open("out_percentage.csv","w+").write(stri)
+open("out/out_percentage.csv","w+").write(stri)

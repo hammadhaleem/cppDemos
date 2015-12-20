@@ -96,5 +96,5 @@ time_line = tmp_data
 
 ## constucted timeline for the tweets 
 time_line = collections.OrderedDict(sorted(time_line.items()))
-open("dump.json","w+").write(json.dumps(time_line))
+open("out/dump.json","w+").write(json.dumps(time_line))
 

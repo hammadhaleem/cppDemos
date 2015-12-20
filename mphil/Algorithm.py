@@ -22,7 +22,7 @@ def ForJ_one_to_m(R_k_t_i, R_k_t_one , i_counter , m ):
 
 #loading things 
 
-time_line = json.loads(open("dump.json").read())
+time_line = json.loads(open("out/dump.json").read())
 # load all tweets processed 
 
 MAX_TWEETS = 0.0
@@ -52,9 +52,7 @@ su = 0
 for tmp in keys: 
 	su = su + len(time_line[str(tmp)])
 	if su > popularity_traget:
-		print su
 		time_to_target = tmp
-	
 		break 
 ## Define 
 
@@ -110,9 +108,7 @@ while i_counter <= 100 :
 		r_e.append( [tb,  rate_e])
 
 		r_f = (rate_e + rate_n)
-
 		r_n_mean = getMean(r_n) 
-
 		r_e_mean = getMean(r_e)
 
 		r_e_mean_recent =  getMean(r_e[-recent:])
@@ -124,21 +120,29 @@ while i_counter <= 100 :
 		mean_recent.append([tb, r_n_mean_recent , r_e_mean_recent , r_e_mean_recent + r_n_mean_recent]) # for storage and visualizaiton
 		all_mean.append([tb , r_f , r_f_mean_recent, r_f_mean]) # for storage and visualizaiton
 		
+		g_t_i =0.0
 		# phase calculation 
-
-		g_t_i  = math.log(r_f_mean_recent)
+		
 
 		if (r_f < r_f_mean) and  (r_f_mean_recent < r_f_mean):
 			if phase != "rise,fall":
 				phase = "rise,fall"
+				g_list =[]
 
 		if (r_f >= r_f_mean) and  (r_f_mean_recent >= r_f_mean):
 			if phase != "fall,rise":
 				phase = "fall,rise"
+				g_list = []
+		
+		g_list.append(r_f)
+		for i in g_list:
+			g_t_i = g_t_i + math.log(i) 
+		g_t_i = g_t_i / len(g_list)
 
 		if phase is "fall,rise":
 			if g_t_i < 0 :
 				g_t_i = g_t_i *-1
+
 		else:
 			if g_t_i > 0:
 				g_t_i = g_t_i *-1
@@ -170,7 +174,7 @@ while i_counter <= 100 :
 			R_n_t_one = 1
 
 		try:
-			R_e_t_one = float (max(1.0 , float(r_e[1][1])))
+			R_e_t_one = float (max(0.0 , float(r_e[1][1])))
 		except Exception as e :
 			R_e_t_one = 1
 
@@ -199,28 +203,26 @@ while i_counter <= 100 :
 
 		N_i = l_t_a + n_t_b
 		N_i_m = N_i + m * delta_t_i * (r_n_bar  + r_e_bar) 
-		print r_n_bar  + r_e_bar  , g_t_i , phase ,m 
-		if N_i_m >= popularity_traget:
+		if N_i_m >= popularity_traget*0.9:
 			T_calc = tb + m*delta_t_i
 
 			err = (T_calc - time_to_target) / time_to_target
 			if err < 0:
 				err = -1.0*err
-			if err > 1:
-				err = 1
-			accu = accu + str(i_counter) + "," +str(err) + "\n"
-			#print i_counter,m , err , ta, TIME_END , T_calc ,N_i_m , N_i , MAX_TWEETS
+
+			accu = accu + str(i_counter*10) + "," +str(err) + "\n"
+			print i_counter,m , err ,(N_i_m - N_i )/ MAX_TWEETS 
 		#post execution
 		ta = tb
 		l_t_a = l_t_b
 		n_t_a = n_t_b
 
 		# Confirm that the time % distribution is alright.
-		# print i_counter , n_t_b + l_t_b , MAX_TWEETS , (n_t_b + l_t_b) / MAX_TWEETS
+		# print i_counter , n_t_b + l_t_b , time_to_target , (n_t_b + l_t_b) / MAX_TWEETS
 		i_counter = i_counter + 1
 
 	next = next + 1 
-print tb
+print "Time of END" , tb
 
 stri = ""
 for i in range(0, len(r_e)):
@@ -236,6 +238,6 @@ for i in all_mean[1:] :
 	stri1 = stri1 + str(i[0]) +","+str(i[1])+","+str(i[0])+"," +str(i[2])+","+str(i[0])+","+str(i[3])+"\n"
 
 
-open("out_percentage.csv","w+").write(stri)
-open("mean_out.csv", "w+").write(stri1)
-open("accu.csv","w+").write(accu)
+open("out/out_percentage.csv","w+").write(stri)
+open("out/mean_out.csv", "w+").write(stri1)
+open("out/accu.csv","w+").write(accu)

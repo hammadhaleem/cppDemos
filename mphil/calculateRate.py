@@ -1,6 +1,6 @@
 import json
 
-time_line = json.loads(open("dump.json").read())
+time_line = json.loads(open("out/dump.json").read())
 timer =[]
 
 for i in time_line.keys():
@@ -40,4 +40,4 @@ for i in range(0, len(timer)):
 	v3, v4 = r_a[i]
 	stri = stri + str(v1 / 60 ) + "," + str(v2) + "," + str(v3 /60)+ ","+ str(v4)+  "," + str(v1/60) + "," + str(v2 + v4)+ "\n"
 
-open("out_time.csv","w+").write(stri)
+open("out/out_time.csv","w+").write(stri)
